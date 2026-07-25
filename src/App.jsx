@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import {
   Phone, Mail, MessageCircle, Camera, Menu, X, ChevronDown, ArrowRight,
-  Compass, Crosshair, Fish, Telescope, Truck, MapPin, Check, Film, Minus,
+  Compass, Crosshair, Fish, Telescope, Truck, Check, Film, Minus,
 } from "lucide-react";
 
 /* ============================================================
@@ -19,8 +19,14 @@ const CONTACT = {
   phone: "+27 83 412 6003",
   phoneHref: "tel:+27834126003",
   waNumber: "27834126003",
-  email: "whileyguide@gmail.com",
+  email: "whiley.kt@gmail.com",
 };
+
+/* Pre-filled mailto — the primary contact channel (many clients are US-based
+   and don't use WhatsApp) */
+const mailLink = (subject, body = "") =>
+  `mailto:${CONTACT.email}?subject=${encodeURIComponent(subject)}` +
+  (body ? `&body=${encodeURIComponent(body)}` : "");
 
 /* Drop an mp4 in public/ (e.g. /montage.mp4) and set it here to
    replace the montage placeholder with autoplaying video. */
@@ -31,7 +37,19 @@ const waLink = (text) =>
 
 /* ---------------- global styles ---------------- */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;0,600;0,700;1,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Mrs+Saint+Delafield&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;0,600;0,700;1,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* Client brand face — used for display headings & accents only */
+@font-face{
+  font-family:'Naturally';
+  src:url('/fonts/Naturally.woff2') format('woff2');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Naturally';
+  src:url('/fonts/Naturally-Italic.woff2') format('woff2');
+  font-weight:400;font-style:italic;font-display:swap;
+}
 
 :root{
   --ink:#161511;
@@ -45,10 +63,10 @@ const CSS = `
   --bone-faint:rgba(239,232,216,.42);
   --ember:#c05a2e;
   --line:rgba(169,155,110,.22);
-  --disp:'Besley', Georgia, serif;
+  /* Naturally for display; Besley is the readable serif fallback while it loads */
+  --disp:'Naturally', 'Besley', Georgia, serif;
   --body:'Karla', system-ui, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, monospace;
-  --script:'Mrs Saint Delafield', cursive;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -62,9 +80,9 @@ section{padding:104px 0}
 
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--khaki);display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .eyebrow::before{content:"";width:34px;height:1px;background:var(--khaki)}
-h1,h2,h3{font-family:var(--disp);font-weight:600;line-height:1.1;letter-spacing:-.01em}
-h2{font-size:clamp(30px,4.4vw,52px);margin-bottom:22px}
-h3{font-size:22px}
+h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.15;letter-spacing:0}
+h2{font-size:clamp(38px,5.2vw,66px);margin-bottom:22px}
+h3{font-size:27px}
 .lead{font-size:18px;color:var(--bone-dim);max-width:62ch}
 
 .btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:15px 26px;border:1px solid var(--khaki);color:var(--bone);text-decoration:none;background:transparent;cursor:pointer;transition:background .25s,color .25s,border-color .25s}
@@ -77,9 +95,9 @@ h3{font-size:22px}
 .nav{position:fixed;top:0;left:0;right:0;z-index:60;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
 .nav.scrolled,.nav.opaque{background:rgba(22,21,17,.94);backdrop-filter:blur(8px);border-color:var(--line)}
 .nav-in{display:flex;align-items:center;justify-content:space-between;height:76px}
-.logo{display:flex;flex-direction:column;line-height:1;text-decoration:none;background:none;border:none;cursor:pointer;text-align:left}
-.logo .script{font-family:var(--script);font-size:30px;color:var(--bone)}
-.logo small{font-family:var(--mono);font-size:9px;letter-spacing:.34em;color:var(--khaki);margin-top:2px;text-transform:uppercase}
+.logo{display:flex;align-items:center;text-decoration:none;background:none;border:none;cursor:pointer;padding:0}
+.logo img{height:46px;width:auto;display:block}
+@media(max-width:560px){.logo img{height:38px}}
 .nav-links{display:flex;gap:28px;align-items:center}
 .nav-links button,.nav-links a{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;color:var(--bone-dim);transition:color .2s;background:none;border:none;cursor:pointer;padding:0}
 .nav-links button:hover,.nav-links a:hover{color:var(--bone)}
@@ -119,7 +137,8 @@ h3{font-size:22px}
 .intro-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:72px;align-items:center}
 .intro-card{background:var(--ink);border:1px solid var(--line);padding:64px 56px}
 .intro-copy p{color:var(--bone-dim);margin-bottom:18px;font-size:17px}
-.intro-copy .sign{font-family:var(--script);font-size:44px;color:var(--khaki);margin-top:28px}
+.intro-copy .sign{margin-top:30px}
+.intro-copy .sign img{height:64px;width:auto;opacity:.92}
 .intro-photo{aspect-ratio:4/5}
 .intro-photo .frame{position:relative;height:100%}
 .intro-photo .frame::after{content:"";position:absolute;inset:0;transform:translate(16px,16px);border:1px solid var(--line);pointer-events:none}
@@ -134,31 +153,53 @@ h3{font-size:22px}
 .slow .vm p{color:var(--bone-dim);margin-bottom:26px}
 @media(max-width:860px){.slow-grid{grid-template-columns:1fr}}
 
-/* 7+3 day ribbon */
-.ribbon{margin-top:44px;padding:34px 30px;border:1px solid var(--khaki);background:linear-gradient(120deg,rgba(192,90,46,.10),transparent 55%)}
-.ribbon h3{font-family:var(--disp);font-size:24px;margin-bottom:6px}
-.ribbon p{color:var(--bone-dim);font-size:15px;margin-bottom:22px}
-.days{display:flex;gap:8px;flex-wrap:wrap}
-.day{width:56px;height:64px;border:1px solid var(--khaki);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:var(--mono)}
-.day b{font-size:17px;font-weight:500}
-.day small{font-size:9px;letter-spacing:.14em;color:var(--bone-faint)}
-.day.paid{background:var(--veld)}
-.day.free{border-style:dashed;border-color:var(--ember);color:var(--ember)}
-.day.free small{color:var(--ember)}
-@media(max-width:560px){.day{width:44px;height:54px}}
+/* 7+3 commitment ribbon */
+.ribbon{margin-top:44px;padding:44px 40px;border:1px solid var(--khaki);background:linear-gradient(120deg,rgba(192,90,46,.10),transparent 55%);text-align:center}
+.ribbon-tag{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--khaki);margin-bottom:14px}
+.ribbon h3{font-family:var(--disp);font-size:clamp(28px,3.4vw,40px);margin-bottom:12px}
+.ribbon p{color:var(--bone-dim);font-size:16px;margin:0 auto 26px;max-width:56ch}
 
 /* experiences */
-.exp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-.exp{background:var(--ink);padding:36px 30px;display:flex;flex-direction:column;gap:14px;min-height:270px;transition:background .25s}
+.exp-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.exp{background:var(--ink);padding:34px 30px;display:flex;flex-direction:column;gap:14px;min-height:230px;transition:background .25s;cursor:pointer;text-align:left;border:none;color:inherit;font:inherit;position:relative}
 .exp:hover{background:var(--ink-2)}
 .exp .ico{color:var(--khaki)}
-.exp h3{font-size:21px}
+.exp h3{font-size:24px}
 .exp p{color:var(--bone-dim);font-size:15px;flex:1}
+.exp .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px}
 .exp .where{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--khaki-dim)}
-.exp.feature{grid-column:span 2;background:var(--veld)}
-.exp.feature:hover{background:#414833}
-@media(max-width:920px){.exp-grid{grid-template-columns:1fr 1fr}.exp.feature{grid-column:span 2}}
+.exp .go{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--khaki);opacity:0;transform:translateX(-6px);transition:opacity .25s,transform .25s}
+.exp:hover .go,.exp.active .go{opacity:1;transform:none}
+.exp.active{background:var(--ink-2)}
+.exp.active::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ember)}
+/* feature spans the full left column, two rows tall */
+.exp.feature{grid-row:span 2;background:var(--veld);justify-content:flex-start}
+.exp.feature:hover,.exp.feature.active{background:#414833}
+.exp.feature h3{font-size:30px;margin-top:8px}
+.exp.feature p{font-size:16px}
+@media(max-width:920px){.exp-grid{grid-template-columns:1fr 1fr}.exp.feature{grid-row:span 1;grid-column:span 2}}
 @media(max-width:600px){.exp-grid{grid-template-columns:1fr}.exp.feature{grid-column:span 1}}
+
+/* expandable detail panel — mirrors "The Guide" layout */
+.exp-detail{border:1px solid var(--khaki);border-top:none;background:var(--ink-2);overflow:hidden;animation:expOpen .4s ease}
+@keyframes expOpen{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.exp-detail-in{display:grid;grid-template-columns:1fr 1.1fr;gap:0}
+.exp-detail .copy{padding:52px 48px}
+.exp-detail .copy .ico{color:var(--khaki);margin-bottom:18px}
+.exp-detail .copy h3{font-size:34px;margin-bottom:8px}
+.exp-detail .copy .where{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--khaki);display:block;margin-bottom:22px}
+.exp-detail .copy p{color:var(--bone-dim);font-size:16px;margin-bottom:16px}
+.exp-detail .copy .btn{margin-top:14px}
+.exp-detail .show{position:relative;min-height:420px}
+@media(max-width:860px){.exp-detail-in{grid-template-columns:1fr}.exp-detail .copy{padding:36px 28px}.exp-detail .show{min-height:300px}}
+
+/* slideshow */
+.slides{position:absolute;inset:0}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .8s ease}
+.slide.on{opacity:1}
+.slides-dots{position:absolute;bottom:18px;left:0;right:0;z-index:3;display:flex;gap:8px;justify-content:center}
+.slides-dots button{width:8px;height:8px;border-radius:50%;border:none;background:rgba(239,232,216,.4);cursor:pointer;padding:0;transition:background .2s,transform .2s}
+.slides-dots button.on{background:var(--ember);transform:scale(1.3)}
 
 /* package cards */
 .pk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
@@ -240,8 +281,13 @@ h3{font-size:22px}
 .c-list{display:flex;flex-direction:column;gap:6px;margin-top:30px}
 .c-item{display:flex;align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--bone);transition:color .2s}
 .c-item:hover{color:var(--khaki)}
-.c-item svg{color:var(--khaki)}
-.c-item span{font-size:17px}
+.c-item svg{color:var(--khaki);flex-shrink:0}
+.c-item span{font-size:17px;display:flex;flex-direction:column;gap:2px}
+.c-item span em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--khaki-dim)}
+.c-item.primary{padding:22px 20px;border:1px solid var(--ember);background:linear-gradient(120deg,rgba(192,90,46,.12),transparent 60%);margin-bottom:8px}
+.c-item.primary:hover{color:var(--bone);border-color:var(--ember);background:linear-gradient(120deg,rgba(192,90,46,.2),transparent 60%)}
+.c-item.primary svg{color:var(--ember)}
+.c-item.primary span{font-size:19px}
 .form .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form input,.form textarea{width:100%;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);font-family:var(--body);font-size:15px;padding:14px 16px;margin-bottom:14px}
 .form input:focus,.form textarea:focus{outline:none;border-color:var(--khaki)}
@@ -283,40 +329,89 @@ h3{font-size:22px}
 
 const EXPERIENCES = [
   {
+    id: "hunting",
     icon: Crosshair, feature: true,
     title: "Private Hunting Safaris",
     where: "South Africa · Best area for your species",
-    text: "The core of what I do. We are not stuck on one property — I plan your hunt around your target species and take you to the best ground for it. Personally guided from the planning stage until I put you back on the plane.",
+    text: "The core of what I do. We are not stuck on one property — I plan your hunt around your target species and take you to the best ground for it.",
+    detail: [
+      "This is where twenty-five years of guiding earns its keep. I am not tied to a single fence line — I plan the hunt around your wishlist and take you to the ground where those animals actually are, whether that's the open Karoo flats for gemsbok or thick riverine bush for a bushbuck.",
+      "You hunt one-on-one with me from the first morning to the last. I'm personally involved from the planning stages until I put you back on the plane — no middleman, no corporate sales desk, no strangers rotated through your camp.",
+    ],
+    slides: [
+      "Kudu bull trophy with client, mountains behind",
+      "Tracking on foot at first light",
+      "Glassing the far slope from a koppie",
+      "Fireside after a good day, camp",
+    ],
   },
   {
+    id: "photographic",
     icon: Telescope,
     title: "Big Five Photographic Safaris",
     where: "Southern Africa",
     text: "For the non-hunters in your party, or the days between hunts — get close to the Big Five with a guide who has spent 25 years reading this bush.",
+    detail: [
+      "Not everyone in the party carries a rifle, and not every day is a hunting day. A photographic safari puts you close to elephant, lion, buffalo, leopard and rhino with someone who knows how they move and where they'll be.",
+      "It's the perfect counterweight to the hunt — a slower, camera-in-hand way to read the same wilderness, ideal for spouses, kids and the rest days built into every slow safari.",
+    ],
+    slides: [
+      "Elephant herd crossing, dust and low light",
+      "Lion pride resting under a tree",
+      "Buffalo at a waterhole, early morning",
+      "Guests in the vehicle, cameras up",
+    ],
   },
   {
+    id: "fishing",
     icon: Fish,
     title: "Tailored Fishing Trips",
     where: "Cape Coast & Inland Waters",
     text: "From deep-sea runs off the Cape to quiet inland waters. Built around your group, your pace, your species.",
+    detail: [
+      "A change of pace and a change of quarry. We run anything from deep-sea trips off the Cape coast to quiet days on inland waters, shaped entirely around your group and what you'd like to chase.",
+      "It slots neatly into a longer safari — a day or two on the water between hunts, or a dedicated trip for the anglers in the family.",
+    ],
+    slides: [
+      "Deep-sea catch held up on the boat",
+      "Boat heading out past the Cape swells",
+      "Quiet inland water at dawn",
+      "Client with a fish, big grin",
+    ],
   },
   {
+    id: "okavango",
     icon: Compass,
     title: "Okavango Delta Experiences",
     where: "Botswana",
     text: "Exclusive Delta experiences for you and your people — one of the last truly wild places on earth.",
+    detail: [
+      "The Okavango is one of the last genuinely wild places on earth — a maze of channels, islands and floodplains that comes alive with game. I put together exclusive Delta experiences for you and your people, well away from the crowds.",
+      "Mokoro at dawn, game everywhere you look, and nights under a sky with no light for a hundred miles. It's the Africa people picture before they ever arrive.",
+    ],
+    slides: [
+      "Mokoro gliding through Delta channels at dawn",
+      "Aerial of the Okavango waterways",
+      "Elephants wading between islands",
+      "Camp at golden hour, Delta",
+    ],
   },
   {
+    id: "selfdrive",
     icon: Truck,
     title: "Self-Drive Camping Safaris",
     where: "Botswana · Zimbabwe · Namibia",
     text: "Raw Africa: Okavango, Chobe, Moremi, Victoria Falls. Camp under the stars with the odd elephant, lion or hyena walking into camp.",
-  },
-  {
-    icon: MapPin,
-    title: "Cape Town & The Garden Route",
-    where: "Western Cape",
-    text: "Bookend your safari with the Mother City, the winelands and the Garden Route — planned and hosted personally.",
+    detail: [
+      "This is raw Africa, first-hand. We convoy through the wilderness of Botswana, Zimbabwe and Namibia — Okavango, Chobe, Moremi National Park, Victoria Falls and much more — with me planning and leading the route.",
+      "Camping under the stars with the genuine thrill of the odd elephant, lion or hyena wandering through camp at night. These are the trips people talk about for the rest of their lives.",
+    ],
+    slides: [
+      "Rooftop tents under a baobab at dusk",
+      "Convoy on a dirt track, big sky",
+      "Victoria Falls from the Zimbabwe side",
+      "Elephant walking past camp, Chobe",
+    ],
   },
 ];
 
@@ -360,30 +455,6 @@ const PACKAGES = [
     note: "Area selected to suit the season and your fitness.",
   },
   {
-    name: "Tiny Ten Sampler",
-    meta: "5 days / 6 nights · Small antelope",
-    price: null,
-    ph: "Klipspringer on rocky outcrop",
-    items: [
-      "3 small antelope — duiker, klipspringer, steenbok…",
-      "The most underrated hunting in Africa",
-      "Ideal add-on to a plains game safari",
-    ],
-    note: "A specialist hunt — patience required, stories guaranteed.",
-  },
-  {
-    name: "Family Slow Safari",
-    meta: "7 + 3 days · Hunters & non-hunters",
-    price: null,
-    ph: "Family around the campfire, evening",
-    items: [
-      "4 plains game trophies for the hunter(s)",
-      "Photographic days built for the family",
-      "Cape Town & Garden Route finale",
-    ],
-    note: "Bring your people. The slow safari is made for this.",
-  },
-  {
     name: "Build Your Own",
     meta: "Any length · Any species",
     price: null,
@@ -415,22 +486,9 @@ const EXCLUDES = [
   "Gratuities",
 ];
 
-const SPECIES = [
-  { name: "Kudu", cat: "Plains Game", note: "The grey ghost — the classic African trophy.", ph: "Kudu bull, spiral horns" },
-  { name: "Cape Buffalo", cat: "Dangerous Game", note: "Black death. The pursuit that defines African hunting.", ph: "Buffalo bull, hard boss" },
-  { name: "Gemsbok", cat: "Plains Game", note: "Rapier horns and desert grit — a Karoo icon.", ph: "Gemsbok in arid veld" },
-  { name: "Springbok", cat: "Plains Game", note: "South Africa's national animal. Common, copper and white variants.", ph: "Springbok ram at sunset" },
-  { name: "Blue Wildebeest", cat: "Plains Game", note: "The poor man's buffalo — tough and wary.", ph: "Wildebeest bull" },
-  { name: "Nyala", cat: "Plains Game", note: "Arguably the most beautiful antelope in Southern Africa.", ph: "Nyala bull in thicket" },
-  { name: "Bushbuck", cat: "Plains Game", note: "A pound-for-pound legend of the riverine thickets.", ph: "Bushbuck ram" },
-  { name: "Common Duiker", cat: "Small Antelope", note: "Part of the Tiny Ten — deceptively difficult.", ph: "Duiker in cover" },
-  { name: "Klipspringer", cat: "Small Antelope", note: "The rock dancer. A mountain hunt on tip-toe hooves.", ph: "Klipspringer on rocks" },
-  { name: "Eland", cat: "Plains Game", note: "The biggest antelope on earth — a long walk, a worthy prize.", ph: "Eland bull" },
-  { name: "Black Wildebeest", cat: "Plains Game", note: "A highveld original found on the open flats.", ph: "Black wildebeest herd" },
-  { name: "Warthog", cat: "Plains Game", note: "Ugly-beautiful, and one of the most fun stalks in Africa.", ph: "Warthog boar, tusks" },
-];
-
-const SPECIES_CATS = ["All", "Plains Game", "Dangerous Game", "Small Antelope"];
+/* NOTE: species explorer was removed from the packages page.
+   If you want a dedicated Species page later, re-add a SPECIES array here
+   and the .sp-grid CSS is still in place to render it. */
 
 const FAQS = [
   {
@@ -576,8 +634,7 @@ function Nav() {
     <header className={`nav ${scrolled ? "scrolled" : ""} ${page !== "home" ? "opaque" : ""}`}>
       <div className="wrap nav-in">
         <button className="logo" onClick={() => go("home")} aria-label="Ken Whiley — African Guide, home">
-          <span className="script">Ken Whiley</span>
-          <small>African Guide</small>
+          <img src="/logo/ken-whiley-white.png" alt="Ken Whiley — African Guide" />
         </button>
         <nav className={`nav-links ${open ? "open" : ""}`}>
           {NAV_ITEMS.map((it) => (
@@ -603,9 +660,8 @@ function Footer() {
   const { go } = useRouter();
   return (
     <div className="wrap foot">
-      <button className="logo" onClick={() => go("home")}>
-        <span className="script" style={{ fontSize: 26 }}>Ken Whiley</span>
-        <small>African Guide · Since 2001</small>
+      <button className="logo" onClick={() => go("home")} style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
+        <img src="/logo/ken-whiley-white.png" alt="Ken Whiley — African Guide" style={{ height: 40 }} />
       </button>
       <nav aria-label="Footer">
         <button onClick={() => go("packages")}>Packages</button>
@@ -613,8 +669,18 @@ function Footer() {
         <button onClick={() => go("faq")}>FAQ</button>
         <button onClick={() => go("contact")}>Contact</button>
       </nav>
-      <small>© {new Date().getFullYear()} Ken Whiley · Southern Africa</small>
+      <small>© 2001 Ken Whiley · Southern Africa</small>
     </div>
+  );
+}
+
+/* Button that routes to the contact page */
+function ContactButton({ label = "Contact Ken", solid = true }) {
+  const { go } = useRouter();
+  return (
+    <button className={`btn ${solid ? "solid" : ""}`} onClick={() => go("contact")}>
+      {label}
+    </button>
   );
 }
 
@@ -745,7 +811,7 @@ function Guide() {
           <p style={{ color: "var(--bone)" }}>
             Thank you for being part of my journey. See you around the campfire.
           </p>
-          <div className="sign">Ken Whiley</div>
+          <div className="sign"><img src="/logo/ken-whiley-white.png" alt="Ken Whiley — African Guide" /></div>
         </Reveal>
         <Reveal className="intro-photo">
           <div className="frame">
@@ -785,24 +851,51 @@ function SlowSafari() {
             </p>
           </Reveal>
         </div>
-        <Reveal className="ribbon" aria-label="Slow safari commitment: book 7 hunting days, get 3 additional days free">
-          <h3>My commitment to the Slow Safari</h3>
-          <p>For every <strong>7 hunting days</strong> you book, I add <strong style={{ color: "var(--ember)" }}>3 additional days — for free.</strong></p>
-          <div className="days">
-            {Array.from({ length: 7 }, (_, i) => (
-              <div className="day paid" key={i}><b>{i + 1}</b><small>HUNT</small></div>
-            ))}
-            {Array.from({ length: 3 }, (_, i) => (
-              <div className="day free" key={i}><b>{i + 8}</b><small>FREE</small></div>
-            ))}
-          </div>
+        <Reveal className="ribbon">
+          <p className="ribbon-tag">My commitment to the slow safari</p>
+          <h3>Book 7 hunting days, and 3 more are on me.</h3>
+          <p>Time is the whole point — so I give you more of it. Every seven-day hunt comes with three extra days to explore, rest, or simply stay a while longer.</p>
+          <ContactButton label="Talk to Ken about dates" />
         </Reveal>
       </div>
     </section>
   );
 }
 
+/* Auto-advancing crossfade slideshow. Swap <Ph> for <img> when photos land. */
+function Slideshow({ slides }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    setI(0);
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || slides.length < 2) return;
+    const t = setInterval(() => setI((n) => (n + 1) % slides.length), 4200);
+    return () => clearInterval(t);
+  }, [slides]);
+  return (
+    <div className="slides">
+      {slides.map((label, n) => (
+        <div className={`slide ${n === i ? "on" : ""}`} key={n} aria-hidden={n !== i}>
+          <Ph label={`PHOTO — ${label}`} style={{ minHeight: "100%", border: "none" }} />
+        </div>
+      ))}
+      <div className="slides-dots">
+        {slides.map((_, n) => (
+          <button
+            key={n}
+            className={n === i ? "on" : ""}
+            onClick={() => setI(n)}
+            aria-label={`Slide ${n + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Experiences() {
+  const [open, setOpen] = useState(null);
+  const active = EXPERIENCES.find((e) => e.id === open);
   return (
     <section id="experiences">
       <div className="wrap">
@@ -811,19 +904,48 @@ function Experiences() {
           <h2>Not stuck on one property.</h2>
           <p className="lead" style={{ marginBottom: 44 }}>
             We explore the best places to match your target species — and build the rest
-            of the journey around you and your people.
+            of the journey around you and your people. Tap any experience to see more.
           </p>
         </Reveal>
         <Reveal className="exp-grid">
           {EXPERIENCES.map((e) => (
-            <article className={`exp ${e.feature ? "feature" : ""}`} key={e.title}>
+            <button
+              className={`exp ${e.feature ? "feature" : ""} ${open === e.id ? "active" : ""}`}
+              key={e.id}
+              onClick={() => setOpen(open === e.id ? null : e.id)}
+              aria-expanded={open === e.id}
+            >
               <e.icon className="ico" size={26} strokeWidth={1.5} />
               <h3>{e.title}</h3>
               <p>{e.text}</p>
-              <span className="where">{e.where}</span>
-            </article>
+              <div className="foot">
+                <span className="where">{e.where}</span>
+                <span className="go">{open === e.id ? "Close" : "Explore"} <ArrowRight size={13} /></span>
+              </div>
+            </button>
           ))}
         </Reveal>
+        {active && (
+          <div className="exp-detail" key={active.id}>
+            <div className="exp-detail-in">
+              <div className="copy">
+                <active.icon className="ico" size={28} strokeWidth={1.5} />
+                <h3>{active.title}</h3>
+                <span className="where">{active.where}</span>
+                {active.detail.map((para, i) => <p key={i}>{para}</p>)}
+                <a className="btn solid" href={mailLink(
+                  `Safari enquiry — ${active.title}`,
+                  `Hi Ken,\n\nI'd like to know more about your ${active.title}. `
+                )}>
+                  <Mail size={16} /> Enquire about this
+                </a>
+              </div>
+              <div className="show">
+                <Slideshow slides={active.slides} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -924,8 +1046,6 @@ function HomePage() {
 /* ---------------- packages page ---------------- */
 
 function PackagesPage() {
-  const [cat, setCat] = useState("All");
-  const list = SPECIES.filter((s) => cat === "All" || s.cat === cat);
   return (
     <>
       <PageHero
@@ -950,41 +1070,23 @@ function PackagesPage() {
           </Reveal>
         </div>
       </section>
-      <section className="slow" id="species">
+      <section className="slow" id="build-together">
         <div className="wrap">
-          <Reveal>
-            <p className="eyebrow">Species</p>
-            <h2>What are you hunting?</h2>
-            <p className="lead">
-              A selection of what Southern Africa offers. Tell me your list — I'll find
-              the ground where it lives.
+          <Reveal style={{ textAlign: "center", marginBottom: 48 }}>
+            <p className="eyebrow" style={{ justifyContent: "center" }}>Tailored Safaris</p>
+            <h2 style={{ marginBottom: 10 }}>Don't see your safari here?</h2>
+            <p className="lead" style={{ margin: "0 auto", fontSize: 22, color: "var(--bone)" }}>
+              Let's build it together.
             </p>
           </Reveal>
-          <div className="filters" role="tablist" aria-label="Filter species by category">
-            {SPECIES_CATS.map((c) => (
-              <button key={c} className={`chip ${cat === c ? "on" : ""}`} onClick={() => setCat(c)} role="tab" aria-selected={cat === c}>
-                {c}
-              </button>
-            ))}
-          </div>
-          <div className="sp-grid">
-            {list.map((s) => (
-              <Reveal as="article" className="sp" key={s.name}>
-                <div className="img"><Ph label={`PHOTO — ${s.ph}`} /></div>
-                <div className="body">
-                  <span className="cat">{s.cat}</span>
-                  <h3>{s.name}</h3>
-                  <p>{s.note}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal className="contact-grid">
+            <ContactChannels />
+            <div>
+              <Ph label="PHOTO — Ken & client planning over a map at the lodge table (landscape)" style={{ aspectRatio: "4/3", minHeight: 0 }} />
+            </div>
+          </Reveal>
         </div>
       </section>
-      <CtaBand
-        title="Don't see your safari here?"
-        text="Good — that means we get to build it. Send me your wishlist and I'll put a plan together."
-      />
     </>
   );
 }
@@ -1087,6 +1189,38 @@ function FaqPage() {
 
 /* ---------------- contact page ---------------- */
 
+/* Reusable contact block — email is the primary channel (many clients are
+   US-based and don't use WhatsApp). Used on the Contact page and Packages page. */
+function ContactChannels({ heading = "Talk to Ken. Not a sales desk." }) {
+  return (
+    <>
+      <h2 style={{ fontSize: 30 }}>{heading}</h2>
+      <p className="lead">
+        Email is the best way to start — I answer every message personally. Prefer
+        to talk? WhatsApp and phone work too.
+      </p>
+      <div className="c-list">
+        <a className="c-item primary" href={mailLink(
+          "Safari enquiry",
+          "Hi Ken,\n\nI'd like to talk about a safari.\n\n"
+        )}>
+          <Mail size={22} strokeWidth={1.5} />
+          <span>
+            {CONTACT.email}
+            <em>Email — the best way to reach me</em>
+          </span>
+        </a>
+        <a className="c-item" href={waLink("Hi Ken — I'd like to talk about a safari.")} target="_blank" rel="noreferrer">
+          <MessageCircle size={20} strokeWidth={1.5} /><span>WhatsApp</span>
+        </a>
+        <a className="c-item" href={CONTACT.phoneHref}>
+          <Phone size={20} strokeWidth={1.5} /><span>{CONTACT.phone}</span>
+        </a>
+      </div>
+    </>
+  );
+}
+
 function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", when: "", msg: "" });
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -1101,22 +1235,7 @@ function ContactPage() {
       <section>
         <div className="wrap contact-grid">
           <Reveal>
-            <h2 style={{ fontSize: 28 }}>Talk to Ken. Not a sales desk.</h2>
-            <p className="lead">
-              WhatsApp is the fastest way to reach me in the field. Calls and email
-              work too — I answer everything personally.
-            </p>
-            <div className="c-list">
-              <a className="c-item" href={CONTACT.phoneHref}>
-                <Phone size={20} strokeWidth={1.5} /><span>{CONTACT.phone}</span>
-              </a>
-              <a className="c-item" href={waLink("Hi Ken — I'd like to talk about a safari.")} target="_blank" rel="noreferrer">
-                <MessageCircle size={20} strokeWidth={1.5} /><span>WhatsApp — fastest reply</span>
-              </a>
-              <a className="c-item" href={`mailto:${CONTACT.email}`}>
-                <Mail size={20} strokeWidth={1.5} /><span>{CONTACT.email}</span>
-              </a>
-            </div>
+            <ContactChannels />
           </Reveal>
           <Reveal className="form" as="form" onSubmit={(e) => {
             e.preventDefault();
@@ -1132,7 +1251,7 @@ function ContactPage() {
               Send enquiry
             </button>
             <p style={{ fontSize: 12.5, color: "var(--bone-faint)", marginTop: 12 }}>
-              Opens in your email app. Prefer to talk? WhatsApp is fastest.
+              Opens in your email app, addressed to Ken directly.
             </p>
           </Reveal>
         </div>
