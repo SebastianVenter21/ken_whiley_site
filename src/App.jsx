@@ -339,10 +339,10 @@ const EXPERIENCES = [
       "You hunt one-on-one with me from the first morning to the last. I'm personally involved from the planning stages until I put you back on the plane — no middleman, no corporate sales desk, no strangers rotated through your camp.",
     ],
     slides: [
-      "Kudu bull trophy with client, mountains behind",
-      "Tracking on foot at first light",
-      "Glassing the far slope from a koppie",
-      "Fireside after a good day, camp",
+      { src: "/photos/tracking-on-foot.jpg", label: "Walking in toward the mountains at first light" },
+      { src: "/photos/kudu-ridge.jpg", label: "Kudu on the ridge" },
+      { src: "/photos/ken-portrait.jpg", label: "Glassing the far slope" },
+      { src: "/photos/kudu-recovered.jpg", label: "A kudu taken on foot, Eastern Cape" },
     ],
   },
   {
@@ -356,10 +356,10 @@ const EXPERIENCES = [
       "It's the perfect counterweight to the hunt — a slower, camera-in-hand way to read the same wilderness, ideal for spouses, kids and the rest days built into every slow safari.",
     ],
     slides: [
-      "Elephant herd crossing, dust and low light",
-      "Lion pride resting under a tree",
-      "Buffalo at a waterhole, early morning",
-      "Guests in the vehicle, cameras up",
+      { src: "/photos/giraffe-silhouette.jpg", label: "Giraffe against a moody sky" },
+      { src: "/photos/buffalo-herd.jpg", label: "Buffalo herd in the green veld" },
+      { src: "/photos/zebra-herd.jpg", label: "Zebra on the move" },
+      { src: "/photos/giraffe-pair.jpg", label: "A pair of giraffe at dusk" },
     ],
   },
   {
@@ -373,10 +373,10 @@ const EXPERIENCES = [
       "It slots neatly into a longer safari — a day or two on the water between hunts, or a dedicated trip for the anglers in the family.",
     ],
     slides: [
-      "Deep-sea catch held up on the boat",
-      "Boat heading out past the Cape swells",
-      "Quiet inland water at dawn",
-      "Client with a fish, big grin",
+      { label: "Deep-sea catch held up on the boat" },
+      { label: "Boat heading out past the Cape swells" },
+      { label: "Quiet inland water at dawn" },
+      { label: "Client with a fish, big grin" },
     ],
   },
   {
@@ -390,10 +390,10 @@ const EXPERIENCES = [
       "Mokoro at dawn, game everywhere you look, and nights under a sky with no light for a hundred miles. It's the Africa people picture before they ever arrive.",
     ],
     slides: [
-      "Mokoro gliding through Delta channels at dawn",
-      "Aerial of the Okavango waterways",
-      "Elephants wading between islands",
-      "Camp at golden hour, Delta",
+      { label: "Mokoro gliding through Delta channels at dawn" },
+      { label: "Aerial of the Okavango waterways" },
+      { label: "Elephants wading between islands" },
+      { label: "Camp at golden hour, Delta" },
     ],
   },
   {
@@ -407,10 +407,10 @@ const EXPERIENCES = [
       "Camping under the stars with the genuine thrill of the odd elephant, lion or hyena wandering through camp at night. These are the trips people talk about for the rest of their lives.",
     ],
     slides: [
-      "Rooftop tents under a baobab at dusk",
-      "Convoy on a dirt track, big sky",
-      "Victoria Falls from the Zimbabwe side",
-      "Elephant walking past camp, Chobe",
+      { src: "/photos/vista-karoo.jpg", label: "Big country, open road" },
+      { label: "Rooftop tents under a baobab at dusk" },
+      { label: "Victoria Falls from the Zimbabwe side" },
+      { label: "Elephant walking past camp, Chobe" },
     ],
   },
 ];
@@ -423,7 +423,7 @@ const PACKAGES = [
     feature: true,
     meta: "7 hunting days + 3 free days · 10 days total",
     price: null,
-    ph: "Kudu bull at last light, wide landscape",
+    ph: "Kudu bull at last light, wide landscape", phSrc: "/photos/kudu-recovered.jpg",
     items: [
       "5 plains game trophies of your choice*",
       "3 additional days FREE — Cape Town, coast or photographic",
@@ -436,7 +436,7 @@ const PACKAGES = [
     name: "The Karoo Classic",
     meta: "7 days / 8 nights · Plains game",
     price: null,
-    ph: "Gemsbok in open Karoo veld",
+    ph: "Gemsbok in open Karoo veld", phSrc: "/photos/kudu-ridge.jpg",
     items: [
       "Kudu", "Gemsbok", "Springbok", "Blue wildebeest", "Warthog",
     ],
@@ -446,7 +446,7 @@ const PACKAGES = [
     name: "Buffalo Pursuit",
     meta: "10 days / 11 nights · Dangerous game",
     price: null,
-    ph: "Cape buffalo bull, hard boss, thick bush",
+    ph: "Cape buffalo bull, hard boss, thick bush", phSrc: "/photos/buffalo-herd.jpg",
     items: [
       "Cape buffalo — hard-bossed bull",
       "2 plains game trophies of your choice",
@@ -458,7 +458,7 @@ const PACKAGES = [
     name: "Build Your Own",
     meta: "Any length · Any species",
     price: null,
-    ph: "Ken glassing from the high ground",
+    ph: "Ken glassing from the high ground", phSrc: "/photos/ken-portrait.jpg",
     items: [
       "Tell me your wishlist and your dates",
       "I find the best ground for your species",
@@ -582,7 +582,19 @@ function RouterProvider({ children }) {
 
 /* ---------------- utilities ---------------- */
 
-function Ph({ label, className = "", style }) {
+function Ph({ label, src, alt, className = "", style }) {
+  // Real image when a src is provided; labelled placeholder otherwise.
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={alt || label || ""}
+        className={className}
+        loading="lazy"
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", ...style }}
+      />
+    );
+  }
   return (
     <div className={`ph ${className}`} style={style} aria-label={`Image placeholder: ${label}`}>
       <div className="ph-tag">
@@ -723,7 +735,7 @@ function Hero() {
   return (
     <section className="hero" id="top">
       <div className="hero-bg">
-        <Ph label="HERO — full-bleed: Karoo ridgeline at last light (landscape, min 2400px)" style={{ minHeight: "100%", border: "none" }} />
+        <Ph src="/photos/hero-karoo-valley.jpg" alt="Karoo valley at first light" label="HERO" style={{ minHeight: "100%", border: "none" }} />
       </div>
       <div className="hero-grad" />
       <div className="wrap hero-in">
@@ -776,7 +788,9 @@ function Montage() {
             <video src={VIDEO_SRC} autoPlay muted loop playsInline preload="metadata" />
           ) : (
             <Ph
-              label="MONTAGE — looping video or wide image: tracking on foot, glassing, fireside, sunrise drive (16:9, muted, ~20–40s)"
+              src="/photos/sunset-antelope.jpg"
+              alt="Two antelope against a Karoo sunset"
+              label="MONTAGE"
               style={{ minHeight: "100%", border: "none" }}
             />
           )}
@@ -815,7 +829,7 @@ function Guide() {
         </Reveal>
         <Reveal className="intro-photo">
           <div className="frame">
-            <Ph label="PORTRAIT — Ken glassing from a koppie, natural light (portrait 4:5)" />
+            <Ph src="/photos/ken-portrait.jpg" alt="Ken glassing from the high ground" label="PORTRAIT — Ken" style={{ objectPosition: "center" }} />
           </div>
         </Reveal>
       </div>
@@ -874,9 +888,9 @@ function Slideshow({ slides }) {
   }, [slides]);
   return (
     <div className="slides">
-      {slides.map((label, n) => (
+      {slides.map((sl, n) => (
         <div className={`slide ${n === i ? "on" : ""}`} key={n} aria-hidden={n !== i}>
-          <Ph label={`PHOTO — ${label}`} style={{ minHeight: "100%", border: "none" }} />
+          <Ph src={sl.src} label={`PHOTO — ${sl.label}`} alt={sl.label} style={{ minHeight: "100%", border: "none" }} />
         </div>
       ))}
       <div className="slides-dots">
@@ -956,7 +970,7 @@ function PackageCard({ p }) {
     <article className={`pk ${p.feature ? "feature" : ""}`}>
       <div className="img">
         {p.feature && <span className="flag">7 + 3 Free Days</span>}
-        <Ph label={`PHOTO — ${p.ph}`} />
+        <Ph src={p.phSrc} label={`PHOTO — ${p.ph}`} alt={p.name} />
       </div>
       <div className="body">
         <span className="meta">{p.meta}</span>
@@ -1082,7 +1096,7 @@ function PackagesPage() {
           <Reveal className="contact-grid">
             <ContactChannels />
             <div>
-              <Ph label="PHOTO — Ken & client planning over a map at the lodge table (landscape)" style={{ aspectRatio: "4/3", minHeight: 0 }} />
+              <Ph src="/photos/ken-bw-rear.jpg" alt="Ken looking out over the veld" label="PHOTO — Ken" style={{ aspectRatio: "4/3", minHeight: 0 }} />
             </div>
           </Reveal>
         </div>
@@ -1097,32 +1111,32 @@ function GalleryPage() {
   const [tab, setTab] = useState("On Safari");
   const sets = {
     "On Safari": [
-      "Kudu bull trophy with client, mountains behind",
-      "Buffalo recovery, early light",
-      "Glassing from the high ground",
-      "Springbok at sunset (portrait crop)",
-      "Around the fire, evening",
-      "Tracking on foot, dry riverbed",
-      "Gemsbok trophy, open plains",
-      "Client & Ken, handshake at the bakkie",
-      "Nyala in the thicket",
-      "Sunrise over the Karoo escarpment",
-      "Duiker — Tiny Ten moment",
-      "Long walk back, last light",
+      { src: "/photos/tracking-on-foot.jpg", label: "Walking in toward the mountains" },
+      { src: "/photos/kudu-recovered.jpg", label: "A kudu taken on foot" },
+      { src: "/photos/ken-portrait.jpg", label: "Glassing from the high ground" },
+      { src: "/photos/sunset-antelope.jpg", label: "Antelope against a Karoo sunset" },
+      { src: "/photos/kudu-ridge.jpg", label: "Kudu on the ridge" },
+      { src: "/photos/buffalo-herd.jpg", label: "Buffalo herd in the green veld" },
+      { src: "/photos/zebra-herd.jpg", label: "Zebra on the move" },
+      { src: "/photos/zebra-kudu-plains.jpg", label: "Plains game, open country" },
+      { src: "/photos/giraffe-pair.jpg", label: "Giraffe at dusk" },
+      { src: "/photos/hero-karoo-valley.jpg", label: "Morning over the Karoo" },
+      { src: "/photos/glassing-sunrise.jpg", label: "First light, glassing the slopes" },
+      { src: "/photos/acacia-sunset.jpg", label: "Sundown through the thorn trees" },
     ],
     "Exploring South Africa": [
-      "Table Mountain from the V&A",
-      "Game drive vehicle, coastal reserve",
-      "Deep-sea catch off the Cape",
-      "Garden Route viewpoint (portrait crop)",
-      "Winelands lunch with guests",
-      "Okavango mokoro at dawn",
-      "Victoria Falls from the Zimbabwe side",
-      "Rooftop tents under a baobab",
-      "Elephant crossing, Chobe",
-      "Penguins at Boulders Beach",
-      "Camp dinner under the stars",
-      "Cableway view over Cape Town",
+      { src: "/photos/vista-karoo.jpg", label: "The vast Karoo escarpment" },
+      { src: "/photos/bush-dinner-sunset.jpg", label: "Dinner set up in the veld at sunset" },
+      { src: "/photos/sunset-hills.jpg", label: "Sun going down over the hills" },
+      { src: "/photos/giraffe-silhouette.jpg", label: "Giraffe against a moody sky" },
+      { src: "/photos/ken-bw-rear.jpg", label: "Taking it all in" },
+      { src: "/photos/sunrise-glass-silhouette.jpg", label: "Sunrise on the mountain" },
+      { label: "Table Mountain from the V&A" },
+      { label: "Garden Route viewpoint" },
+      { label: "Winelands lunch with guests" },
+      { label: "Okavango mokoro at dawn" },
+      { label: "Victoria Falls from the Zimbabwe side" },
+      { label: "Penguins at Boulders Beach" },
     ],
   };
   return (
@@ -1140,7 +1154,7 @@ function GalleryPage() {
             ))}
           </div>
           <div className="gal-grid">
-            {sets[tab].map((l, i) => <Ph key={tab + i} label={`PHOTO — ${l}`} />)}
+            {sets[tab].map((l, i) => <Ph key={tab + i} src={l.src} alt={l.label} label={`PHOTO — ${l.label}`} />)}
           </div>
         </div>
       </section>
